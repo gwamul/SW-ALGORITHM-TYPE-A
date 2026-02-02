@@ -1,32 +1,65 @@
+import json
 import os
 
 def generate_readme():
-    file_path = 'problems.txt'
+    file_path = 'study_plan.json'
 
-    # 1. 디버깅: 현재 위치와 파일 목록 출력 (로그에서 확인용)
-    print(f"현재 작업 경로: {os.getcwd()}")
-    print(f"현재 경로의 파일 목록: {os.listdir()}")
-
-    # 2. 파일 존재 여부 확인
     if not os.path.exists(file_path):
-        # 파일이 없으면 강제로 에러를 발생시켜서 빨간불을 띄움
-        raise FileNotFoundError(f"❌ '{file_path}' 파일을 찾을 수 없습니다! 파일 이름(대소문자)과 위치를 확인해주세요.")
+        print(f"❌ '{file_path}' 파일이 없습니다.")
+        return
 
-    # 3. 파일 읽기
+    # 1. JSON 파일 읽기
     with open(file_path, 'r', encoding='utf-8') as f:
-        problems = f.read().split()
+        data = json.load(f)
 
-    # 4. README 내용 생성
-    content = "# 📂 백준 문제 풀이 목록\n\n"
-    content += "| 문제 번호 | 바로가기 |\n"
-    content += "| :---: | :--- |\n"
+    current_week_title = data['current_week']
+    weeks_data = data['weeks']
 
-    for num in problems:
-        if not num.strip(): continue # 공백 제거
-        url = f"https://www.acmicpc.net/problem/{num}"
-        content += f"| {num} | [문제 보러가기 🚀]({url}) |\n"
+    # 2. README 헤더 작성
+    content = "# 🐢 꾸준히 가는 코딩 테스트 스터디\n\n"
+    content += "매주 정해진 문제를 풀고 PR을 올려주세요!\n\n"
 
-    # 5. README.md 덮어쓰기
+    # 3. 🔥 이번 주 도전 문제 (최상단 노출)
+    content += f"## 🔥 이번 주 도전 문제 ({current_week_title})\n"
+    content += "| 문제 번호 | 문제 이름(링크) | 상태 |\n"
+    content += "| :---: | :--- | :---: |\n"
+
+    # 현재 주차 데이터 찾기
+    current_problems = []
+    for week in weeks_data:
+        if week['title'] == current_week_title:
+            current_problems = week['problems']
+            break
+    
+    if not current_problems:
+        content += "| - | 휴식 주간이거나 설정 오류입니다 | - |\n"
+    else:
+        for num in current_problems:
+            url = f"https://www.acmicpc.net/problem/{num}"
+            content += f"| {num} | [문제 보러가기 🚀]({url}) | 🏃 진행중 |\n"
+    
+    content += "\n---\n\n"
+
+    # 4. 📚 과거 기록 (접이식으로 깔끔하게)
+    content += "## 📚 스터디 기록\n"
+    
+    # 최신 주차가 위로 오게 역순 정렬해서 보여줌
+    for week in reversed(weeks_data):
+        # 이번 주는 위에서 보여줬으니 스킵
+        if week['title'] == current_week_title:
+            continue
+            
+        content += f"<details>\n<summary><b>{week['title']} (클릭해서 보기)</b></summary>\n\n"
+        content += "| 문제 번호 | 링크 |\n"
+        content += "| :---: | :--- |\n"
+        
+        for num in week['problems']:
+            url = f"https://www.acmicpc.net/problem/{num}"
+            content += f"| {num} | [바로가기]({url}) |\n"
+        
+        content += "\n</details>\n\n"
+
+    # 5. README 저장
     with open('README.md', 'w', encoding='utf-8') as f:
         f.write(content)
     
