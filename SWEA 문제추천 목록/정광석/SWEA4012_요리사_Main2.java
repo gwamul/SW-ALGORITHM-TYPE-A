@@ -1,4 +1,4 @@
-package saffy_algo.SWEA.D5;
+package 정광석;
 
 import java.io.BufferedReader;
 import java.io.IOException;
